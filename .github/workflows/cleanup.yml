@@ -1,0 +1,119 @@
+name: Cleanup Workflows and Releases
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_cleanup:
+        description: "Type 'DELETE' to confirm cleanup of all workflows, artifacts, and draft releases"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: write
+  repository-projects: write
+
+jobs:
+  cleanup:
+    name: Cleanup Workflows, Artifacts, and Draft Releases
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Validate confirmation
+        run: |
+          if [ "${{ inputs.confirm_cleanup }}" != "DELETE" ]; then
+            echo "::error::Confirmation failed. You must type 'DELETE' to proceed."
+            exit 1
+          fi
+          echo "Confirmation validated. Proceeding with cleanup..."
+
+      - name: Delete all workflow runs
+        run: |
+          echo "Fetching all workflow runs..."
+          
+          # Get all workflows
+          workflows=$(curl -s -H "Authorization: token ${{ github.token }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows" | \
+            jq -r '.workflows[].id')
+          
+          for workflow_id in $workflows; do
+            echo "Processing workflow ID: $workflow_id"
+            
+            # Get all runs for this workflow
+            page=1
+            while true; do
+              runs=$(curl -s -H "Authorization: token ${{ github.token }}" \
+                "https://api.github.com/repos/${{ github.repository }}/actions/workflows/$workflow_id/runs?per_page=100&page=$page" | \
+                jq -r '.workflow_runs[].id')
+              
+              if [ -z "$runs" ]; then
+                break
+              fi
+              
+              for run_id in $runs; do
+                echo "Deleting workflow run: $run_id"
+                curl -X DELETE -s -H "Authorization: token ${{ github.token }}" \
+                  "https://api.github.com/repos/${{ github.repository }}/actions/runs/$run_id" || true
+              done
+              
+              page=$((page + 1))
+            done
+          done
+          
+          echo "Workflow runs cleanup completed"
+
+      - name: Delete all workflow artifacts
+        run: |
+          echo "Fetching all artifacts..."
+          
+          page=1
+          while true; do
+            artifacts=$(curl -s -H "Authorization: token ${{ github.token }}" \
+              "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?per_page=100&page=$page" | \
+              jq -r '.artifacts[].id')
+            
+            if [ -z "$artifacts" ]; then
+              break
+            fi
+            
+            for artifact_id in $artifacts; do
+              echo "Deleting artifact: $artifact_id"
+              curl -X DELETE -s -H "Authorization: token ${{ github.token }}" \
+                "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$artifact_id" || true
+            done
+            
+            page=$((page + 1))
+          done
+          
+          echo "Artifacts cleanup completed"
+
+      - name: Delete all draft releases
+        run: |
+          echo "Fetching all draft releases..."
+          
+          page=1
+          while true; do
+            releases=$(curl -s -H "Authorization: token ${{ github.token }}" \
+              "https://api.github.com/repos/${{ github.repository }}/releases?per_page=100&page=$page" | \
+              jq -r '.[] | select(.draft == true) | .id')
+            
+            if [ -z "$releases" ]; then
+              break
+            fi
+            
+            for release_id in $releases; do
+              echo "Deleting draft release ID: $release_id"
+              curl -X DELETE -s -H "Authorization: token ${{ github.token }}" \
+                "https://api.github.com/repos/${{ github.repository }}/releases/$release_id" || true
+            done
+            
+            page=$((page + 1))
+          done
+          
+          echo "Draft releases cleanup completed"
+
+      - name: Summary
+        run: |
+          echo "::notice::Cleanup completed successfully!"
+          echo "::notice::All workflow runs, artifacts, and draft releases have been deleted."
+
