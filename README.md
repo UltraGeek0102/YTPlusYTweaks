@@ -9,6 +9,7 @@ YTweaks added settings:
 - **Fullscreen to the right or left:** Locks fullscreen orientation.
 - **Disable floating miniplayer:** Restores the old miniplayer by disabling the floating miniplayer.
 - **Virtual fullscreen bezels:** Adds invisible touch-safe zones on black bars to prevent accidental taps and skips.
+- **Fix Casting** - Attempts to fix casting by changing some A/B flags. Only works on v20.10.4 or lower
 
 Experimental planned features
 - **Hide AI Summaries:** Hides AI summaries that appear in the feed.
@@ -43,7 +44,7 @@ If you plan on testing, adding other tweaks, making changes, or building very fr
     <li>Select "Build YTPlusYTweaks".</li>
     <li>Click "Run workflow".</li>
     <li>Select bundled tweaks.</li>
-    <li>Prepare a decrypted .ipa file <em>(we cannot provide this due to legal reasons)</em>, then upload it to a file provider (e.g., https://litterbox.catbox.moe, or Dropbox is recommended. If you use Dropbox, change the end of the URL from `dl=0` to `dl=1`). Paste the URL of the decrypted IPA file in the provided field.
+    <li>Prepare a decrypted .ipa file, v20.10.4 or below for 'Fix Casting' to work <em>(we cannot provide this due to legal reasons)</em>, then upload it to a file provider (e.g., https://litterbox.catbox.moe, or Dropbox is recommended. If you use Dropbox, change the end of the URL from `dl=0` to `dl=1`). Paste the URL of the decrypted IPA file in the provided field.
     <strong>NOTE:</strong> Make sure to provide a direct download link to the file, not a link to a webpage. Otherwise, the process will fail.</li>
     <li>Click "Run workflow".</li>
     <td><img src="Resources/scr15.jpg" alt="Screenshot 15" /></td>
